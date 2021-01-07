@@ -2,18 +2,23 @@
 //  main.cpp
 //  jj
 //
-//  Created by dohan on 04/01/2021.
+//  Created by dohan on 03/01/2021.
 //
 
 #include <iostream>
-#include <vector>
-
 #define MAX 64
+using namespace std;
 
 int grid[MAX][MAX], temp[MAX][MAX];
+bool visited[MAX][MAX] = {false};
+int dx[] = { 0, 0, 1, -1 };
+int dy[] = { 1, -1, 0, 0 };
 int N, Q;
 
-using namespace std;
+
+int max(int x, int y){
+    return (x>y)?x:y;
+}
 
 
 void rotate(int y, int x,int L ){
@@ -35,29 +40,59 @@ void melt(){
     
     for(int i=0 ; i<N; i++){
         for(int j=0 ; j<N; j++){
-            if(!grid[i][j]){
-                if(grid[i][j-1]) check[i][j-1]=1;
-                if(grid[i][j+1]) check[i][j+1]=1;
-                if(grid[i-1][j]) check[i-1][j]=1;
-                if(grid[i+1][j]) check[i+1][j]=1;
+        
+            int cnt = 0;
+            for(int k=0;k<4; k++){
+                int y = i+dx[k];
+                int x = j+dy[k];
+                if(x>=0 && y>=0 && x<N && y<N){
+                    if(grid[y][x]>0) cnt++;
+                }
+            }
+            if(cnt < 3) check[i][j] = 1;
+        }
+    }
+    
+    for(int i=0; i<N; i++){
+        for(int j=0; j<N ; j++){
+            if(check[i][j]&& grid[i][j] >0) grid[i][j]--;
+        }
+    }
+    
+}
+
+
+int dfs(int i, int j){
+    int a = 1;
+    visited[i][j] = true;
+    for(int k=0;k<4; k++){
+        int y = i+dx[k];
+        int x = j+dy[k];
+        if(x>=0 && y>=0 && x<N && y<N){
+            if(!visited[y][x] && grid[y][x]){
+                a += dfs(y, x);
+            }
+        }
+    }
+    return a;
+}
+
+
+int countIce(){
+    
+    int sum=0;
+    
+    for(int i=0; i<N; i++){
+        for(int j=0; j<N; j++){
+            if(grid[i][j] && !visited[i][j]){
+                sum = max(sum, dfs(i,j));
             }
         }
     }
     
-    
-    if(check[0][0] && grid[0][0]) grid[0][0]--;
-    if(check[0][N-1] && grid[0][N-1]) grid[0][N-1]--;
-    if(check[N-1][0] && grid[N-1][0]) grid[N-1][0]--;
-    if(check[N-1][N-1] && grid[N-1][N-1]) grid[N-1][N-1]--;
-    
-    for(int i=0; i<N; i++){
-        for(int j=0; j<N ; j++){
-            if(check[i][j]) grid[i][j]--;
-        }
-    }
-    
-    
+    return sum;
 }
+
 
 int main(void) {
     //input
@@ -75,30 +110,19 @@ int main(void) {
         cin >> L;
         L = 1 << L;
         
-        
         //rotate
         for(int i=0; i<N/L; i++){
             for(int j=0; j<N/L; j++){
                 rotate(i*L,j*L,L);
-                
             }
         }
-//        for(int i=0; i<N; i++){
-//            for(int j=0; j<N; j++){
-//                cout << grid[i][j] << " ";
-//            }
-//            cout << endl;
-//        }
-//        cout << "++++++++++++++++"<< endl;
-//
+ 
         //melting
-        //melt();
-        
-        
-//        print
+        melt();
         
     }
     
+    //sum
     int sum =0;
     
     for(int i=0; i<N; i++){
@@ -106,10 +130,15 @@ int main(void) {
             sum += grid[i][j];
         }
     }
-    cout << sum;
+    cout << sum << endl;
+    
+    //dfs
+    int ice = countIce();
+    cout << ice;
+    
+    
    
 }
-
 
 
 
