@@ -64,3 +64,24 @@ bool solution(vector<vector<int>> key, vector<vector<int>> lock) {
     
     return false;
 }
+
+int main(void){
+    vector<vector<int>> key = {{0, 0, 0}, {1, 0, 0}, {0, 1, 1}};
+    vector<vector<int>> lock = {{1, 1, 1}, {1, 1, 0}, {1, 0, 1}};
+//    cout << solution(key, lock);
+    for(int i=0; i<key.size(); i++){
+        for(int j=0; j<key.size(); j++){
+            cout << key[i][j] << " ";
+        }
+        cout << endl;
+    }
+    
+    key = rotate(key);
+    for(int i=0; i<key.size(); i++){
+        for(int j=0; j<key.size(); j++){
+            cout << key[i][j] << " ";
+        }
+        cout << endl;
+    }
+}
+
