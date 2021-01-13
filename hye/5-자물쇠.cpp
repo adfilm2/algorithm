@@ -11,7 +11,7 @@ bool compare(int r, int c,vector<vector<int>> key, vector<vector<int>> lock ){
     //key의 1부분이 lock의 0이랑 맞는지 확인
     for(int i=0; i<K; i++){
         for(int j=0; j<K; j++){
-            if(r+i>0 && c+j>0 && r+i<L && c+j<L){
+            if(r+i>=0 && c+j>=0 && r+i<L && c+j<L){
                 if(key[i][j] == lock[r+i][c+j]) return false;
                 if(!lock[r+i][c+j]) lock[r+i][c+j] = 1;
             }
@@ -64,24 +64,3 @@ bool solution(vector<vector<int>> key, vector<vector<int>> lock) {
     
     return false;
 }
-
-int main(void){
-    vector<vector<int>> key = {{0, 0, 0}, {1, 0, 0}, {0, 1, 1}};
-    vector<vector<int>> lock = {{1, 1, 1}, {1, 1, 0}, {1, 0, 1}};
-//    cout << solution(key, lock);
-    for(int i=0; i<key.size(); i++){
-        for(int j=0; j<key.size(); j++){
-            cout << key[i][j] << " ";
-        }
-        cout << endl;
-    }
-    
-    key = rotate(key);
-    for(int i=0; i<key.size(); i++){
-        for(int j=0; j<key.size(); j++){
-            cout << key[i][j] << " ";
-        }
-        cout << endl;
-    }
-}
-
