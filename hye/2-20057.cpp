@@ -36,13 +36,13 @@ void moveSand(int y, int x, int dir){
     for(int k=0; k<9; k++){
         i = y + sy[dir][k];
         j = x + sx[dir][k];
-        if(i < 0 || i >= N || j <0 || j >=N){
+        if(i < 0 || i >= N || j < 0 || j >= N){
             result += floor(sand * percent[k]);
             grid[nexty][nextx] -= floor(sand * percent[k]);
         }else{
             grid[i][j] += floor(sand * percent[k]) ;
             grid[nexty][nextx] -= floor(sand * percent[k]);
-            cout << "grid["<<i<<"]["<<j<<"] "<<grid[i][j]<<endl;
+            
         }
     }
     
@@ -58,6 +58,8 @@ void moveSand(int y, int x, int dir){
 
 
 int main(void){
+    //input
+    
     cin >> N;
     for(int i=0; i<N; i++){
         for(int j=0; j<N; j++) cin >> grid[i][j];
@@ -69,10 +71,8 @@ int main(void){
     int curx = N/2;
     int cury = N/2;
     int dir = 0;
-    
-    
-    
-    for(int n=1; n<N; n++){
+
+    for(int n=1; n<=N; n++){
         for(int i=0 ; i<2; i++){
             for(int k=0; k<n; k++){
                 if(curx == 0 && cury == 0){
@@ -81,7 +81,7 @@ int main(void){
                 moveSand(cury, curx, dir);
                 cury = cury + dy[dir];
                 curx = curx + dx[dir];
-                
+
             }
             dir = (dir+1)%4;
         }
