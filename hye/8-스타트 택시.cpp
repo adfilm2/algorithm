@@ -1,5 +1,5 @@
-
 #include <iostream>
+#include<cstring>
 #include <queue>
 #define Nmax 20
 #define Mmax 400
@@ -8,25 +8,50 @@ using namespace std;
 
 
 int Map[Nmax][Nmax] ={0,};
-int visit[Nmax][Nmax] ={0,};
+int visit[Nmax][Nmax];
 int client[Mmax][5] ={0,};
-int dy[] = { -1,0,1,0 };
-int dx[] = { 0,1,0,-1 };
+int dr[] = { -1,0,1,0 };    //위 오 아래 왼
+int dc[] = { 0,1,0,-1 };
 int N, M, oil;
-int minDis;
+int minDis; //nextclient까지의 거리
 
-int find(int sr, int sc, int dr, int dc){
-    int dist = 0;
-    //[sr][sc]부터 [ar][ac]까지 최단거리 반환
+
+
+int find(int sr, int sc, int ar, int ac){
     
-    return dist;
+    memset(visit, -1, sizeof(visit));
+    visit[sr][sc]=0;
+    queue<pair<int, int>> q;
+    q.push({sr,sc});
+    
+    while (!q.empty()) {
+        int r = q.front().first;
+        int c = q.front().second;
+        
+        if(r == ar && c == ac) return visit[ar][ac] ;     //목적지면 return
+        q.pop();
+        for(int i=0; i<4; i++){
+            int rr = r + dr[i];
+            int cc = c + dc[i];
+            
+            if(rr < 0|| cc < 0 || rr >=N || cc >= N) continue;      //범위 넘어가면 pass
+            if(visit[rr][cc] >=0) continue;       //가본곳이면 pass
+            if(Map[rr][cc]) continue;   //벽있으면 pass
+            
+            visit[rr][cc] = visit[r][c] + 1;
+            q.push({rr,cc});
+        }
+    }
+    
+    
+    return visit[ar][ac];
 }
 
 
 int nextClient(int r, int c){
     int next = 999;
     int temp;
-    int idx;
+    int idx = -1;
     
     for(int i=0; i<M; i++){
         if(client[i][0]) continue;  //이미 태운적있으면 pass
@@ -34,6 +59,7 @@ int nextClient(int r, int c){
         temp = find(r,c,client[i][1],client[i][2]);
         
         //temp가 더 적거나, 같은데 temp의 r이 더 적을때 next에 temp저장
+        if(temp == -1) continue;
         if( temp < next || (temp == next && client[i][1] < client[idx][1] ) ){
             next = temp;
             idx = i;
@@ -76,28 +102,36 @@ int main(void){
 
     for(int i=0; i<M; i++){
         n = nextClient(r, c);
-        
+        if(n == -1){
+            cout << -1;
+            return 0;
+        }
         if(oil - minDis <= 0){
             cout << -1;
-            break;
+            return 0;
         }
-        
+
         oil -= minDis;
         r = client[n][1];
         c = client[n][2];
-        
+
         dis = find(r,c,client[n][3],client[n][4]);
-        if(oil - dis <= 0){
+        if(dis == -1){
             cout << -1;
-            break;
+            return 0;
+        }
+        if(oil - dis < 0){
+            cout << -1;
+            return 0;
+            
         }
         oil += dis;
         r = client[n][3];
         c = client[n][4];
         client[n][0] = 1;
-        
+
     }
-    
+
     cout << oil;
     
     
