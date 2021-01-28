@@ -11,7 +11,6 @@ int N;
 bool isBo, isBuild;
 
 bool checkBo(int r, int c){
-    if(r == N) return false;    //바닥이면 안됨
     if(COL[r+1][c] || COL[r+1][c+1]) return true;   //보 끝에 기둥 있거나
     if(BO[r][c-1] && BO[r][c+1]) return true;       //양 옆에 보가 있거나
     
@@ -71,7 +70,7 @@ void possible(vector<int> frame){
             //delete - column
             COL[r][c] = 0;
             
-            if(COL[r-1][c-1] && !checkBo(r-1, c-1) ){
+            if(BO[r-1][c-1] && !checkBo(r-1, c-1) ){
                 COL[r][c] = 1;
             }
             
@@ -111,31 +110,3 @@ vector<vector<int>> solution(int n, vector<vector<int>> build_frame) {
 
     return answer;
 }
-
-int main(void){
-    vector<vector<int>> answer;
-    vector<vector<int>> a= {{1,0,0,1},{1,1,1,1},{2,1,0,1},{2,2,1,1},{5,0,0,1},{5,1,0,1},{4,2,1,1},{3,2,1,1}};
-    
-    N = 5;
-    
-    for(int i=0; i<a.size(); i++){
-        possible(a[i]);
-    }
-    
-    for(int j=0; j<=5; j++){
-        for(int i=5; i>=0; i--){
-            if(COL[i][j]){
-                answer.push_back({j,5-i,0});
-            }
-            if(BO[i][j]){
-                answer.push_back({j,5-i,1});
-            }
-        }
-    }
-    
-    for(int i=0; i<answer.size(); i++){
-        cout << answer[i][0] << " " << answer[i][1] << " " << answer[i][2] <<endl;
-    }
-}
-
-
