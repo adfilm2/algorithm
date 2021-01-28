@@ -1,0 +1,61 @@
+import java.util.Arrays;
+
+class Solution {
+    Node[] nodes;
+    public int solution(int[] food_times, long k) {
+        int N = food_times.length;
+        Node head = new Node(-1, -1);
+        nodes = new Node[N];
+        long sum = 0;
+        for(int i = 0; i < N; i++) {
+            nodes[i] = new Node(i, food_times[i]);
+            sum += food_times[i];
+        }
+        if(k >= sum) return -1;
+        head.next = nodes[0];
+        nodes[0].prev = head;
+        for(int i = 0; i < N - 1; i++) {
+            nodes[i].next = nodes[i+1];
+            nodes[i + 1].prev = nodes[i];   
+        }
+        Arrays.sort(nodes);
+        int start = 0;
+        int food_cnt = N;
+        int cycle = 0;
+        for(int i = 0; i < N; i++) {
+            k -= (long)(nodes[i].food - cycle) * food_cnt;
+            if(k < 0) {
+              k += (long)(nodes[i].food - cycle) * food_cnt;
+              break;   
+            }
+            food_cnt --;
+            nodes[i].prev.next = nodes[i].next;
+            if(nodes[i].next != null) nodes[i].next.prev = nodes[i].prev;
+            cycle = nodes[i].food;
+        }
+        k = k % food_cnt;
+        Node cur = head;
+        for(; k >= 0; k--) {
+            cur = cur.next;
+        }
+        return cur.pos + 1;
+    }
+}
+class Node implements Comparable<Node>{
+    int pos;
+    int food;
+    Node prev;
+    Node next;
+    public Node(int pos, int food){
+        this.pos = pos;
+        this.food = food;
+        prev = null;
+        next = null;
+    }
+    
+    @Override
+    public int compareTo(Node node) {
+        if(food == node.food) return pos > node.pos ? 1 : -1;
+        return food > node.food ? 1 : -1;
+    }
+}
