@@ -1,87 +1,93 @@
 #include <string>
 #include <vector>
-#include <map>
+#include <iostream>
+#include <algorithm>
+#include <iterator>
+#include <unordered_map>
 
 using namespace std;
-typedef struct webpage {
-    string url;
-    string body;
-} webpage;
-
-struct tag {
-    string name;
-    vector<tag*> child;
-    map<string, string> properties;
-    string text;
-};
-
-struct parser {
-    tag* root;
-    string page;
-    vector<tag*> tag_stack;
-
-    void parseProperty(int& idx) {
-
-        int closed_tag_idx = page.find_first_of('>', idx);
-        int key_last_idx = page.find_first_of('=', idx);
-        while (closed_tag_idx > key_last_idx) {
-            int value_last_idx = page.find_first_of('"', key_last_idx+2);
-            string key = string(page.begin()+idx, page.begin()+key_last_idx);
-            string value = string(page.begin()+key_last_idx+2, page.begin()+value_last_idx-1);
-        }
-
-
-    }
-
-    void parse() {
-
-        for (int i=0; i<page.size(); i++) {
-            
-            if (page[i] == '<') {
-                string tag_name;
-                if (page[i+1] == '/') {
-                    // 닫는 태그 경우
-                    int closed_tag_idx = page.find_first_of('>', i);
-                    tag_name = string(page.begin() + i+2, page.begin() + closed_tag_idx);
-                    tag* child_tag = tag_stack.back();
-                    tag_stack.pop_back();
-                    tag* parent_tag = tag_stack.back();
-                    parent_tag->child.push_back(child_tag);
-                    i = closed_tag_idx + 1;
-                }
-                else {
-                    // 여는 태그 경우
-                    int first_space_idx = page.find_first_of(' ', i);
-                    int closed_tag_idx = page.find_first_of('>', i);
-
-                    if (first_space_idx < closed_tag_idx) {
-                        tag_name = string(page.begin() + i, page.begin() + first_space_idx);
-                        i = first_space_idx+1;
-                        parseProperty(i);
-                    }
-                    else {
-                        tag_name = string(page.begin() + i, page.begin() + closed_tag_idx);
-                    }
-
-                    tag* new_tag = new tag{tag_name, {}, {}, ""};
-                }
-            }
-        }
-    }
-};
 
 int solution(string word, vector<string> pages) {
     int answer = 0;
-    int num_of_pages = pages.size();
-
-    vector<webpage> parsed_pages;
-    parsed_pages.assign(num_of_pages, {"", ""});
-
-    for (int i=0; i<num_of_pages; i++) {
-        parser page_parser = {nullptr, pages[i]};
-        
-
+    
+    std::transform(word.begin(), word.end(), word.begin(), ::tolower);
+    vector<string> page_urls;
+    vector<int> base_scores;
+    vector<int> link_nums;
+    vector<vector<int> > links;
+    
+    unordered_map<string, int> url_map;
+    
+    for (int i=0; i<pages.size(); i++) {
+        auto meta_property = pages[i].find("<meta property=");
+        auto url_pos = pages[i].find("content=\"", meta_property);
+        auto url_end = pages[i].find("\"", url_pos+9);
+        string url = pages[i].substr(url_pos+9, url_end-url_pos-9);
+        page_urls.push_back(url);
+        url_map[url] = i;
     }
-
+    
+    for (int i=0; i<pages.size(); i++) {        
+        
+        // 기본 점수
+        int base_score = 0;
+        string lower_html = "";
+        std::transform(pages[i].begin(), pages[i].end(), back_inserter(lower_html), ::tolower);
+        
+        size_t prev = 0;
+        auto next = lower_html.find(word);
+        while (next != string::npos) {
+            string found = lower_html.substr(next, word.size());
+            if (!isalpha(lower_html[next-1]) && !isalpha(lower_html[next+word.size()])) {
+                base_score += 1;
+            }
+            
+            prev = next;
+            next = lower_html.find(word, prev+word.size());
+        }
+        
+        base_scores.push_back(base_score);
+    }
+    
+    // 링크 개수
+    link_nums.assign(pages.size(), 0);
+    links.assign(pages.size(), vector<int>());
+    for (int i=0; i<pages.size(); i++) {
+        size_t prev = 0;
+        auto atag_start = pages[i].find("<a href=");
+        while (atag_start != string::npos) {
+        
+            auto url_end = pages[i].find(">", atag_start);
+            string link = pages[i].substr(atag_start+9, url_end-atag_start-10);
+            
+            link_nums[i] += 1;
+            if (url_map.count(link) != 0)
+                links[i].push_back(url_map[link]);
+            
+            prev = atag_start;
+            atag_start = pages[i].find("<a href=", prev+10);
+        }
+    }
+    
+    // 링크 점수
+    vector<double> base_per_links(pages.size(), 0);
+    for (int i=0; i<pages.size(); i++) {
+        base_per_links[i] = (double)base_scores[i] / link_nums[i];
+    }
+    
+    vector<double> link_scores(pages.size(), 0);
+    for (int i=0; i<link_scores.size(); i++) {
+        for (int j=0; j<links[i].size(); j++) {
+            link_scores[links[i][j]] += base_per_links[i];
+        }
+    }
+    
+    vector<double> matching_scores(pages.size(), 0);
+    for (int i=0; i<pages.size(); i++) {
+        matching_scores[i] += link_scores[i];
+        matching_scores[i] += base_scores[i];
+    }
+    
+    answer = max_element(matching_scores.begin(), matching_scores.end()) - matching_scores.begin();
     return answer;
 }
