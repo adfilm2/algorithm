@@ -69,8 +69,6 @@ void spread(vector<int> pick)
 				BFS.push_back(newT);
 			}
 		}
-		//print();
-
 		ans++;
 		if (chk())
 		{
@@ -122,6 +120,5 @@ int main()
 	}
 	if (Time == 999999) { Time = -1; }
 	cout << Time;
-
 
 }
