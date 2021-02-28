@@ -1,26 +1,17 @@
 #include <string>
+#include <cstring>
 #include <vector>
 #include <algorithm>
 #include <map>
+#include <iostream>
 
 using namespace std;
-typedef struct Rectangle {
+struct Rectangle {
     int minr, maxr, minc, maxc;
-} Rectangle;
-typedef struct PossibleBlock {
-    int num, c1, c2;
-} PossibleBlock;
-
-void print(vector<vector<int> >& board) {
-    int N=board.size();
-    for (int r=0;r<N; r++){
-        for (int c=0;c<N;c++) {
-            printf("%3d ",board[r][c]);
-        }
-        printf("\n");
-    }
-    printf("\n");
-}
+};
+struct PossibleBlock {
+    int num, c1, c2, minr, maxr;
+};
 
 void findBlocks(vector<vector<int> > &board, map<int, Rectangle> &rectangles, int N) {
     for (int r=0; r<N; r++) {
@@ -86,17 +77,10 @@ void findPossibleBlocks(vector<vector<int> > &board, vector<PossibleBlock>& bloc
         vector<Pos> bp = blank.second;
 
         if (isPossibleBlanks(bp[0].r, bp[0].c, bp[1].r, bp[1].c)) {
-            blocks.push_back({block_num, bp[0].c+rectangles[block_num].minc, bp[1].c+rectangles[block_num].minc});
+            blocks.push_back({block_num, bp[0].c+rectangles[block_num].minc, bp[1].c+rectangles[block_num].minc,
+                             rectangles[block_num].minr, rectangles[block_num].maxr});
         }
     }
-}
-
-bool isInArray(vector<PossibleBlock> arr, int data) {
-
-    for (int i=0; i<arr.size(); i++) {
-        if (arr[i].num == data) return true;
-    }
-    return false;
 }
 
 int solution(vector<vector<int>> board) {
@@ -109,7 +93,18 @@ int solution(vector<vector<int>> board) {
 
     vector<PossibleBlock> block_possible_eliminated;
     findPossibleBlocks(board, block_possible_eliminated, rectangles);
+    
+    bool can_eliminated[201];
+    memset(can_eliminated, 0, sizeof(can_eliminated));
 
+    sort(block_possible_eliminated.begin(), block_possible_eliminated.end(), [](auto a, auto b) {
+        if (a.minr == b.minr) {
+            return a.maxr < b.maxr;
+        }
+        return a.minr < b.minr;
+    });
+    
+    // 제거될 수 있는 블럭들에 대해서
     for (int idx=0; idx < block_possible_eliminated.size(); idx++) {
         int possible_block = block_possible_eliminated[idx].num;
         int c1 = block_possible_eliminated[idx].c1, c2 = block_possible_eliminated[idx].c2;
@@ -120,19 +115,22 @@ int solution(vector<vector<int>> board) {
         for (int r=maxr; r>=0; r--) {
 
             if (board[r][c1] != possible_block && board[r][c1] != 0) {
-                if (!isInArray(block_possible_eliminated, board[r][c1])) {
+                if (!can_eliminated[board[r][c1]]) {
                     is_can_eliminated = false;
+                    break;
                 }
             }
             
             if (board[r][c2] != possible_block && board[r][c2] != 0) {
-                if (!isInArray(block_possible_eliminated, board[r][c2])) {
+                if (!can_eliminated[board[r][c2]]) {
                     is_can_eliminated = false;
+                    break;
                 }
             }
         }
 
         if (is_can_eliminated) {
+            can_eliminated[possible_block] = true;
             answer += 1;
         }
     }
