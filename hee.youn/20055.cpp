@@ -2,89 +2,107 @@
 using namespace std;
 
 #define fi(i, a, b) for(register int i = a; i < b; i++)
+#define mod(a, b) (((a) % (b) + (b)) % (b))
 #define MAX_N 100
 #define MAX_2_N 200
 #define MAX_ROBOT 10000000
 
+int N, _2N;
+
 struct Robot;
 
-int durability[MAX_2_N];
-Robot* belts[MAX_2_N];
-int N, dN;
-int step;
-int upArea, downArea;
-int broken;
+struct Belt {
+	int pos;
+	int durability;
+	Robot* robot;
+	bool unable() {
+		return robot || durability == 0;
+	}
+};
 
 struct Robot {
-	int idx;
-	int pos;
-	bool move() {
-		int nextPos = (pos + 1) % dN;
-		if (nextPos == downArea) {
-			pos = nextPos;
-			return true;
-		}
-		if (belts[nextPos]) return false;
-		if (durability[nextPos] == 0) return false;
-		pos = nextPos;
-		return true;
+	Belt* belt;
+	bool arrived(int downArea) {
+		if (belt->pos == downArea) return true;
+		int next = mod(belt->pos + 1, _2N);
+		return next == downArea;
 	}
-} robots[MAX_ROBOT];
+	int getPos() {
+		return belt->pos;
+	}
+	int nextPos() {
+		return mod(belt->pos + 1, _2N);
+	}
+	void move(Belt* nextBelt) {
+		belt->robot = 0;
+		nextBelt->robot = this;
+		nextBelt->durability -= 1;
+		belt = nextBelt;
+	}
+};
+
+Robot robots[MAX_ROBOT];
 int f, r;
-Robot* addRobot(int pos) {
-	Robot* cur = &robots[r++];
-	cur->pos = pos;
-	cur->idx = r;
-	durability[pos] -= 1;
-	if (durability[pos] == 0) broken++;
-	return cur;
+
+void addRobot(Belt* belt) {
+	robots[r].belt = belt;
+	belt->durability -= 1;
+	belt->robot = &robots[r];
+	r++;
 }
-void simulate() {
-	if (belts[downArea] != 0) {
-		f++;
-		belts[downArea] = 0;
+
+void popRobot() {
+	robots[f].belt->robot = 0;
+	f++;
+}
+
+struct ConveySystem {
+	int upArea;
+	int downArea;
+	Belt belts[MAX_2_N];
+	int broken = 0;
+
+	bool isValid(int K) {
+		return broken < K;
 	}
-	fi(i, f, r) {
-		int prev = robots[i].pos;
-		if (robots[i].move()) {
-			int pos = robots[i].pos;
-			belts[prev] = 0;
-			belts[pos] = &robots[i];
-			if (pos == downArea) {
-				f++;
-				belts[downArea] = 0;
-				continue;
-			}
-			durability[pos] -= 1;
-			if (durability[pos] == 0) broken++;
+
+	void action() {
+		upArea = mod(upArea - 1, _2N);
+		downArea = mod(downArea - 1, _2N);
+
+		while (f < r && robots[f].arrived(downArea)) { popRobot(); }
+
+		fi(i, f, r) {
+			int next = robots[i].nextPos();
+			if (belts[next].unable()) continue;
+			robots[i].move(&belts[next]);
+			if (robots[i].belt->durability > 0) continue;
+			broken++;
 		}
+		if (belts[upArea].unable()) return;
+		addRobot(&belts[upArea]);
+		if (belts[upArea].durability > 0) return;
+		broken++;
+		return;
 	}
-	if (belts[upArea] != 0) {
-		cout << "Error" << endl;
-	}
-	if (durability[upArea] > 0) {
-		belts[upArea] = addRobot(upArea);
-	}
-}
+};
+
 int main() {
 	int K;
 	cin >> N >> K;
-	dN = N * 2;
-	fi(i, 0, dN) {
-		cin >> durability[i];
-		belts[i] = 0;
+	_2N = N * 2;
+	ConveySystem system{ 0, N };
+	fi(i, 0, _2N) {
+		int durability;
+		cin >> durability;
+		system.belts[i] = { i, durability, 0 };
 	}
 	f = r = 0;
-	broken = 0;
-	upArea = 0;
-	downArea = N;
-	step = 0;
-	while (broken < K) {
-		step++;
-		upArea = (upArea - 1 + dN) % dN;
-		downArea = (downArea - 1 + dN) % dN;
-		simulate();
+	for (int step = 1; ; step++) {
+		system.action();
+		if (system.isValid(K)) continue;
+		cout << step;
+		return 0;
 	}
-	cout << step;
 	return 0;
 }
