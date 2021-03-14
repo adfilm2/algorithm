@@ -4,6 +4,7 @@ using namespace std;
 #define MAX_N 20
 #define MAX_M 400
 #define MAX_QUEUE 1000000
+#define WALL 1
 
 int N, M;
 int map[MAX_N][MAX_N];
@@ -11,23 +12,28 @@ int map[MAX_N][MAX_N];
 struct Point {
     int r;
     int c;
+    Point operator +(Point point) {
+        return { r + point.r , c + point.c};
+    }
     bool operator >(Point point){
         return r > point.r || (r == point.r && c > point.c);
+    }
+    bool operator ==(Point point) {
+        return (point.r == r && point.c == c);
     }
 };
 
 bool isValid(Point* p) {
     int r = p -> r;
     int c = p -> c;
-    if (map[r][c] == 1) return false;
+    if (map[r][c] == WALL) return false;
     return r >= 0 && c >= 0 && r < N &&  c < N;
 }
 
 struct Person {
-    int endR;
-    int endC;
+    Point pos;
     bool isArrived(Point point) {
-        return (point.r == endR && point.c == endC);
+        return point == pos;
     }
 } persons[MAX_M];
 Person* standingMap[MAX_N][MAX_N];
@@ -39,30 +45,7 @@ bool spendFeul(int needs) {
     return true;
 }
 
-void read_input(int *startR, int *startC) {
-    cin >> N >> M >> FEUL;
-    fi(i, 0, N) {
-        fi(j, 0, N) {
-            cin >> map[i][j];
-            standingMap[i][j] = 0;
-        }
-    }
-    int _startR, _startC;
-    cin >> _startR >> _startC;
-    *startR = _startR - 1;
-    *startC = _startC - 1;
-    int r, c;
-    fi(i, 0, M) {
-        cin >> r >> c >> persons[i].endR >> persons[i].endC;
-        r -= 1;
-        c -= 1;
-        persons[i].endR -= 1;
-        persons[i].endC -= 1;
-        standingMap[r][c] = &persons[i];
-    }
-}
-
-int dir[4][2]{ {-1, 0} ,{0, -1},{0, 1},{1,0} };
+Point dir[4]{ {-1, 0} ,{0, -1},{0, 1},{1,0} };
 int visit[MAX_N][MAX_N];
 Point queue[MAX_QUEUE];
 int f, r;
@@ -78,7 +61,7 @@ bool move(Point* car, Person* p) {
     while (f < r) {
         Point cur = queue[++f];
         fi(i, 0, 4) {
-            Point nxt = { cur.r + dir[i][0], cur.c + dir[i][1] };
+            Point nxt = cur + dir[i];
             if (!isValid(&nxt)) continue;
             if (visit[nxt.r][nxt.c] > 0) continue;
             queue[++r] = nxt;
@@ -115,7 +98,7 @@ Person* find_customer(Point* car) {
         Point cur = queue[++f];
         if (visit[cur.r][cur.c] >= minDistance) continue;
         fi(i, 0, 4) {
-            Point nxt = { cur.r + dir[i][0], cur.c + dir[i][1] };
+            Point nxt = cur + dir[i];
             if (!isValid(&nxt)) continue;
             if (visit[nxt.r][nxt.c] > 0) continue;
             visit[nxt.r][nxt.c] = visit[cur.r][cur.c] + 1;
@@ -136,6 +119,30 @@ Person* find_customer(Point* car) {
     standingMap[customer.r][customer.c] = 0;
     return ret;
 }
+
+void read_input(int *startR, int *startC) {
+    cin >> N >> M >> FEUL;
+    fi(i, 0, N) {
+        fi(j, 0, N) {
+            cin >> map[i][j];
+            standingMap[i][j] = 0;
+        }
+    }
+    int _startR, _startC;
+    cin >> _startR >> _startC;
+    *startR = _startR - 1;
+    *startC = _startC - 1;
+    int r, c;
+    fi(i, 0, M) {
+        cin >> r >> c >> persons[i].pos.r >> persons[i].pos.c;
+        r -= 1;
+        c -= 1;
+        persons[i].pos.r -= 1;
+        persons[i].pos.c -= 1;
+        standingMap[r][c] = &persons[i];
+    }
+}
+
 int solution(int startR, int startC) {
     Point car = { startR, startC };
     fi(i, 0, M) {
