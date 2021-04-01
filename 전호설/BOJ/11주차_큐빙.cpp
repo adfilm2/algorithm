@@ -35,25 +35,9 @@ void CubeSet()
 			Cube[5][i][j] = 'b';
 		}
 	}
-	Hash['U'] = 0;
-	Hash['D'] = 1;
-	Hash['F'] = 2;
-	Hash['B'] = 3;
-	Hash['L'] = 4;
-	Hash['R'] = 5;
-	Hash['+'] = 1;
-	Hash['-'] = 3;
-}
-
-void Print()
-{
-	for (int j = 0; j < 3; j++)
-	{
-		for (int k = 0; k < 3; k++)
-		{
-			cout << Cube[0][j][k];
-		}cout << endl;
-	}
+	Hash['U'] = 0; 	Hash['D'] = 1; 	Hash['F'] = 2;
+	Hash['B'] = 3;  Hash['L'] = 4;  Hash['R'] = 5;
+	Hash['+'] = 1;  Hash['-'] = 3;
 }
 
 void CubeRot(char key, int t)
