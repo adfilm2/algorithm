@@ -43,10 +43,6 @@ bool isCycle(int n, vector<vector<bool> > &graph, Edge edge) {
     
 }
 
-bool isExist(unordered_set<int> &us, int v) {
-    return us.find(v) != us.end();
-}
-
 int solution(int n, vector<vector<int>> costs) {
     int answer = 0;
     priority_queue<Edge> pq;
